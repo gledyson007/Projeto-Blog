@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  djangoapp:
+    container_name: djangoapp
+    build:
+      context: .
+    ports:
+      - 8000:8000
+    volumes:
+      - ./djangoapp:/djangoapp
+      - ./data/web/static:/data/web/static/
+      - ./data/web/media:/data/web/media/
+    env_file:
+      - ./dotenv_files/.env
+    depends_on:
+      psql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:  # Note o "s" aqui (correto para a definição do serviço)
+      - app_network
+
+  psql:
+    container_name: psql
+    image: postgres:14-alpine
+    volumes:
+      - ./data/postgres/data:/var/lib/postgresql/data/
+    env_file:
+      - ./dotenv_files/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blog_user -d blog_base_de_dados"]
+      start_period: 30s  # Tempo extra para inicialização
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    networks:  # Corrigido - com "s"
+      - app_network
+
+networks:  # Note o "s" aqui (correto para a definição global)
+  app_network:
+    driver: bridge
