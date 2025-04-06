@@ -9,15 +9,17 @@ services:
       - 8000:8000
     volumes:
       - ./djangoapp:/djangoapp
+      - ./scripts:/scripts
       - ./data/web/static:/data/web/static/
       - ./data/web/media:/data/web/media/
     env_file:
       - ./dotenv_files/.env
+    working_dir: /djangoapp
     depends_on:
       psql:
         condition: service_healthy
     restart: unless-stopped
-    networks:  # Note o "s" aqui (correto para a definição do serviço)
+    networks:  
       - app_network
 
   psql:
@@ -30,16 +32,16 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U blog_user -d blog_base_de_dados"]
-      start_period: 30s  # Tempo extra para inicialização
+      start_period: 30s  
       interval: 10s
       timeout: 5s
       retries: 6
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
-    networks:  # Corrigido - com "s"
+    networks: 
       - app_network
 
-networks:  # Note o "s" aqui (correto para a definição global)
+networks:  
   app_network:
     driver: bridge
